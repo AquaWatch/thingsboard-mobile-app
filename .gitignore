@@ -52,3 +52,7 @@ GoogleService-Info.plist
 # FVM Version Cache
 .fvm/
 WARP.md
+
+# Config files
+config.json
+lib/firebase_options.dart

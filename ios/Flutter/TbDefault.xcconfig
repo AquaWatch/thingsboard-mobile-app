@@ -1,5 +1,5 @@
-IOSAPPLICATIONID=org.thingsboard.pe.app
-IOSAPPLICATIONNAME=ThingsBoard Pe App
+IOSAPPLICATIONID=com.aquawatchsolutions.swimos
+IOSAPPLICATIONNAME=SWIM-OS Mobile
 REGISTRATIONREDIRECTURLHOST=app.pe.thingsboard.org
 REGISTRATIONREDIRECTURLSCHEME=tbscheme
-APPLINKSURLHOST=thingsboard.cloud
+APPLINKSURLHOST=swim-os.aquawatchsolutions.com
