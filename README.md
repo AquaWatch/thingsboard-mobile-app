@@ -18,14 +18,13 @@ Build your own advanced IoT mobile application **with minimum coding efforts**
 This fork is configured for `com.aquawatchsolutions.swimos` against
 `https://swim-os.aquawatchsolutions.com`.
 
-Three build inputs are **not** committed, because they carry the ThingsBoard app
-secrets and the Firebase keys:
+Two build inputs are **not** committed, because they carry the ThingsBoard app
+secrets:
 
 | File | Purpose | Source |
 | --- | --- | --- |
 | `config.json` | dart-defines, passed with `--dart-define-from-file` | Secret Manager |
 | `ios/Flutter/AppConfig.xcconfig` | iOS build settings Xcode reads (bundle id, display name, URL scheme) | generated from `config.json` |
-| `lib/firebase_options.dart` | FlutterFire options, imported by `lib/main.dart` | Secret Manager, or `flutterfire configure` |
 
 They live in Google Secret Manager in the **RiverWatch** project
 (`riverwatch-be1e4`) — see ENG-245.
@@ -44,32 +43,19 @@ One-time, then whenever the secrets change:
 .\scripts\fetch-secrets.ps1
 ```
 
-Both scripts pull the secrets, write `config.json`, generate
-`ios/Flutter/AppConfig.xcconfig` from it, and write `lib/firebase_options.dart`.
-Locally they use your own gcloud credentials, so log in first:
+Both scripts pull the secret, write `config.json`, and generate
+`ios/Flutter/AppConfig.xcconfig` from it. Locally they use your own gcloud
+credentials, so log in first:
 
 ```bash
 gcloud auth application-default login
 ```
 
-You need `roles/secretmanager.secretAccessor` on the secrets.
+You need `roles/secretmanager.secretAccessor` on the secret.
 
-Secret IDs default to `SWIM-OS-MOBILE-CONFIG-JSON` and
-`SWIM-OS-MOBILE-FIREBASE-OPTIONS`; override with the `CONFIG_SECRET` /
-`FIREBASE_OPTIONS_SECRET` environment variables (or the matching `-ConfigSecret`
-/ `-FirebaseOptionsSecret` parameters on Windows).
-
-> **`SWIM-OS-MOBILE-FIREBASE-OPTIONS` does not exist yet.** Until it is created,
-> the scripts keep whatever `lib/firebase_options.dart` is already on disk, and a
-> clean checkout has none -- `lib/main.dart` imports it, so the build will not
-> compile. Either upload the file:
->
-> ```bash
-> gcloud secrets create SWIM-OS-MOBILE-FIREBASE-OPTIONS >   --project=riverwatch-be1e4 --data-file=lib/firebase_options.dart
-> ```
->
-> or generate it locally with `flutterfire configure --project=riverwatch-be1e4`.
-> CI needs the secret, since a runner always starts from a clean checkout.
+The secret ID defaults to `SWIM-OS-MOBILE-CONFIG-JSON`; override it with the
+`CONFIG_SECRET` environment variable (or the `-ConfigSecret` parameter on
+Windows).
 
 ### Building
 

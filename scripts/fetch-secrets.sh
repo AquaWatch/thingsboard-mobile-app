@@ -5,7 +5,6 @@
 #
 #   config.json                     dart-defines consumed via --dart-define-from-file
 #   ios/Flutter/AppConfig.xcconfig  generated from config.json, consumed by Xcode
-#   lib/firebase_options.dart       FlutterFire output (optional secret)
 #
 # Used by CI and by local dev. Locally it authenticates with your own gcloud
 # login; on a runner it uses whatever ADC the auth step put in place.
@@ -20,8 +19,6 @@ set -euo pipefail
 GCP_PROJECT="${GCP_PROJECT:-riverwatch-be1e4}"
 CONFIG_SECRET="${CONFIG_SECRET:-SWIM-OS-MOBILE-CONFIG-JSON}"
 CONFIG_SECRET_VERSION="${CONFIG_SECRET_VERSION:-latest}"
-FIREBASE_OPTIONS_SECRET="${FIREBASE_OPTIONS_SECRET:-SWIM-OS-MOBILE-FIREBASE-OPTIONS}"
-FIREBASE_OPTIONS_SECRET_VERSION="${FIREBASE_OPTIONS_SECRET_VERSION:-latest}"
 # -----------------------------------------------------------------------------
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -29,7 +26,6 @@ cd "$repo_root"
 
 config_file="config.json"
 xcconfig_file="ios/Flutter/AppConfig.xcconfig"
-firebase_file="lib/firebase_options.dart"
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -118,26 +114,6 @@ for var, key in MAPPING:
 open(dest, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
 PY
 log "    wrote $xcconfig_file"
-
-# --- lib/firebase_options.dart -----------------------------------------------
-log "==> Fetching $FIREBASE_OPTIONS_SECRET:$FIREBASE_OPTIONS_SECRET_VERSION"
-tmp_firebase="$(mktemp)"
-# This secret is optional, so gcloud's own error is noise when it is absent --
-# the branches below explain the outcome instead.
-if access_secret "$FIREBASE_OPTIONS_SECRET" "$FIREBASE_OPTIONS_SECRET_VERSION" > "$tmp_firebase" 2>/dev/null && [ -s "$tmp_firebase" ]; then
-  mv "$tmp_firebase" "$firebase_file"
-  normalize_file "$firebase_file"
-  log "    wrote $firebase_file"
-elif [ -f "$firebase_file" ]; then
-  rm -f "$tmp_firebase"
-  log "    secret unavailable; keeping existing $firebase_file"
-else
-  rm -f "$tmp_firebase"
-  die "no '$FIREBASE_OPTIONS_SECRET' secret and no local $firebase_file.
-  lib/main.dart imports it, so the build will not compile without it. Either
-  store the file in Secret Manager, or regenerate it with:
-      flutterfire configure --project=$GCP_PROJECT"
-fi
 
 log ""
 log "Done. Build with:"

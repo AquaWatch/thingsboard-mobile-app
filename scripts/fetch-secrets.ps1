@@ -8,7 +8,6 @@
 
         config.json                     dart-defines consumed via --dart-define-from-file
         ios/Flutter/AppConfig.xcconfig  generated from config.json, consumed by Xcode
-        lib/firebase_options.dart       FlutterFire output (optional secret)
 
 .EXAMPLE
     .\scripts\fetch-secrets.ps1
@@ -22,9 +21,7 @@ param(
     # [A-Za-z0-9_-]; there is no literal "config.json" secret.
     [string]$GcpProject                    = $(if ($env:GCP_PROJECT) { $env:GCP_PROJECT } else { 'riverwatch-be1e4' }),
     [string]$ConfigSecret                  = $(if ($env:CONFIG_SECRET) { $env:CONFIG_SECRET } else { 'SWIM-OS-MOBILE-CONFIG-JSON' }),
-    [string]$ConfigSecretVersion           = 'latest',
-    [string]$FirebaseOptionsSecret         = $(if ($env:FIREBASE_OPTIONS_SECRET) { $env:FIREBASE_OPTIONS_SECRET } else { 'SWIM-OS-MOBILE-FIREBASE-OPTIONS' }),
-    [string]$FirebaseOptionsSecretVersion  = 'latest'
+    [string]$ConfigSecretVersion           = 'latest'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,20 +29,16 @@ $ErrorActionPreference = 'Stop'
 $repoRoot     = Split-Path -Parent $PSScriptRoot
 $configFile   = Join-Path $repoRoot 'config.json'
 $xcconfigFile = Join-Path $repoRoot 'ios\Flutter\AppConfig.xcconfig'
-$firebaseFile = Join-Path $repoRoot 'lib\firebase_options.dart'
 
 if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
     throw 'gcloud not found on PATH. Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install'
 }
 
 function Get-Secret {
-    param([string]$Name, [string]$Version, [switch]$Quiet)
+    param([string]$Name, [string]$Version)
 
     # gcloud is a .cmd shim; capture stdout and let a non-zero exit mean "no access".
-    # -Quiet uses gcloud's own --verbosity rather than a PowerShell 2>$null
-    # redirect, which in 5.1 wraps native stderr lines in NativeCommandError.
     $gcloudArgs = @('secrets', 'versions', 'access', $Version, "--secret=$Name", "--project=$GcpProject")
-    if ($Quiet) { $gcloudArgs += '--verbosity=none' }
 
     $payload = & gcloud @gcloudArgs
     if ($LASTEXITCODE -ne 0) { return $null }
@@ -109,30 +102,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path -Parent $xcconfigFile) | O
 Write-Utf8Lf -Path $xcconfigFile -Text ($lines -join "`n")
 Write-Host "    wrote $xcconfigFile"
 
-# --- lib/firebase_options.dart -----------------------------------------------
-Write-Host "==> Fetching ${FirebaseOptionsSecret}:${FirebaseOptionsSecretVersion}"
-$firebaseOptions = Get-Secret -Name $FirebaseOptionsSecret -Version $FirebaseOptionsSecretVersion -Quiet
-if ($null -ne $firebaseOptions) {
-    Write-Utf8Lf -Path $firebaseFile -Text $firebaseOptions
-    Write-Host "    wrote $firebaseFile"
-}
-elseif (Test-Path $firebaseFile) {
-    Write-Host "    secret unavailable; keeping existing $firebaseFile"
-}
-else {
-    throw @"
-no '$FirebaseOptionsSecret' secret and no local lib/firebase_options.dart.
-lib/main.dart imports it, so the build will not compile without it. Either
-store the file in Secret Manager, or regenerate it with:
-    flutterfire configure --project=$GcpProject
-"@
-}
-
 Write-Host ''
 Write-Host 'Done. Build with:'
 Write-Host '    flutter build apk --dart-define-from-file=config.json'
 Write-Host '    flutter build ipa --dart-define-from-file=config.json'
-
-# The optional fetch above may have left $LASTEXITCODE non-zero; the script
-# itself succeeded, and CI reads the process exit code.
-exit 0
