@@ -86,9 +86,13 @@ Credentials in place first:
 ### Where the values land
 
 `config.json` is the single source of truth. `android/app/build.gradle` reads it
-through the dart-define bundle; Xcode cannot, so the iOS-facing subset is
-projected into `ios/Flutter/AppConfig.xcconfig`, which `Debug.xcconfig` and
-`Release.xcconfig` include *after* `TbDefault.xcconfig` so it wins.
+through the dart-define bundle. Xcode cannot read dart-defines directly, so the
+Runner scheme has a build pre-action that decodes `$DART_DEFINES` and writes
+`ios/Flutter/AppConfig.xcconfig` on every build. `Debug.xcconfig` and
+`Release.xcconfig` include that file after `TbDefault.xcconfig`. An xcconfig
+applies the last assignment of a given variable, so the generated values
+override the `TbDefault.xcconfig` defaults. The generated file is gitignored and
+does not exist until the first build.
 
 Checked-in fallbacks (`android/app/build.gradle`, `ios/Flutter/TbDefault.xcconfig`)
 are set to the SWIM-OS values, so a build without `config.json` still produces the

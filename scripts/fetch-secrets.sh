@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 #
 # Pulls the SWIM-OS mobile build configuration out of Google Secret Manager and
-# materialises the files that are deliberately kept out of git:
-#
-#   config.json                     dart-defines consumed via --dart-define-from-file
-#   ios/Flutter/AppConfig.xcconfig  generated from config.json, consumed by Xcode
+# writes config.json, the dart-defines file consumed via --dart-define-from-file.
 #
 # Used by CI and by local dev. Locally it authenticates with your own gcloud
 # login; on a runner it uses whatever ADC the auth step put in place.
@@ -25,7 +22,6 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 config_file="config.json"
-xcconfig_file="ios/Flutter/AppConfig.xcconfig"
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -34,31 +30,22 @@ command -v gcloud >/dev/null 2>&1 \
   || die "gcloud not found on PATH. Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install"
 
 # Probe by executing, not by presence on PATH: on Windows, `python3` is often a
-# Microsoft Store "app execution alias" that resolves but cannot run.
+# Microsoft Store "app execution alias" that resolves but cannot run. Check the
+# major version too, since `python` is still Python 2 on some machines and the
+# snippet below uses Python 3 only syntax.
 python_bin=""
 for candidate in python3 python py; do
-  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "import sys" >/dev/null 2>&1; then
+  if command -v "$candidate" >/dev/null 2>&1 \
+     && "$candidate" -c 'import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)' >/dev/null 2>&1; then
     python_bin="$candidate"
     break
   fi
 done
-[ -n "$python_bin" ] || die "a working python3 (or python) is required to render $xcconfig_file"
+[ -n "$python_bin" ] || die "Python 3 is required to validate $config_file"
 
 access_secret() {
   # access_secret <secret-id> <version> -> secret payload on stdout
   gcloud secrets versions access "$2" --secret="$1" --project="$GCP_PROJECT"
-}
-
-normalize_file() {
-  # LF endings, exactly one trailing newline. Keeps this script and its
-  # PowerShell twin byte-identical, so switching between them is not a diff.
-  "$python_bin" - "$1" <<'PY'
-import io, sys
-path = sys.argv[1]
-text = io.open(path, encoding='utf-8-sig', newline='').read()
-text = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n') + '\n'
-io.open(path, 'w', encoding='utf-8', newline='').write(text)
-PY
 }
 
 # --- config.json -------------------------------------------------------------
@@ -73,47 +60,22 @@ if ! access_secret "$CONFIG_SECRET" "$CONFIG_SECRET_VERSION" > "$tmp_config" || 
   - Confirm you hold roles/secretmanager.secretAccessor on the secret."
 fi
 
-"$python_bin" -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$tmp_config" \
-  || die "secret '$CONFIG_SECRET' is not valid JSON"
+# Validate and normalise in one pass, while the payload is still in the temp file
+# the trap covers: reject anything that is not JSON, and strip a UTF-8 BOM, which
+# flutter cannot parse in --dart-define-from-file.
+"$python_bin" - "$tmp_config" <<'PY' || die "secret '$CONFIG_SECRET' is not valid JSON"
+import io, json, sys
+
+path = sys.argv[1]
+text = io.open(path, encoding='utf-8-sig', newline='').read()
+json.loads(text)
+text = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n') + '\n'
+io.open(path, 'w', encoding='utf-8', newline='').write(text)
+PY
 
 mv "$tmp_config" "$config_file"
 trap - EXIT
-normalize_file "$config_file"
 log "    wrote $config_file"
-
-# --- ios/Flutter/AppConfig.xcconfig ------------------------------------------
-# Xcode cannot read dart-defines, so the iOS-facing subset of config.json is
-# projected into an xcconfig that Debug.xcconfig/Release.xcconfig include after
-# TbDefault.xcconfig (later include wins).
-mkdir -p "$(dirname "$xcconfig_file")"
-"$python_bin" - "$config_file" "$xcconfig_file" <<'PY'
-import json, sys
-
-src, dest = sys.argv[1], sys.argv[2]
-cfg = json.load(open(src, encoding='utf-8'))
-
-# xcconfig variable <- config.json key
-MAPPING = [
-    ('IOSAPPLICATIONID',             'iosApplicationId'),
-    ('IOSAPPLICATIONNAME',           'iosApplicationName'),
-    ('REGISTRATIONREDIRECTURLHOST',  'registrationRedirectUrlHost'),
-    ('REGISTRATIONREDIRECTURLSCHEME', 'registrationRedirectUrlScheme'),
-    ('APPLINKSURLHOST',              'appLinksUrlHost'),
-]
-
-lines = ['// Generated from config.json by scripts/fetch-secrets. Do not edit.']
-for var, key in MAPPING:
-    value = cfg.get(key)
-    if value in (None, ''):
-        continue
-    value = str(value)
-    if '//' in value:
-        raise SystemExit("error: %s contains '//', which xcconfig parses as a comment" % key)
-    lines.append('%s=%s' % (var, value))
-
-open(dest, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
-PY
-log "    wrote $xcconfig_file"
 
 log ""
 log "Done. Build with:"

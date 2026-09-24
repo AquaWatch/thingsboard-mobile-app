@@ -3,11 +3,9 @@
     Pulls the SWIM-OS mobile build configuration out of Google Secret Manager.
 
 .DESCRIPTION
-    Windows counterpart to scripts/fetch-secrets.sh. Materialises the files that
-    are deliberately kept out of git:
-
-        config.json                     dart-defines consumed via --dart-define-from-file
-        ios/Flutter/AppConfig.xcconfig  generated from config.json, consumed by Xcode
+    Windows counterpart to scripts/fetch-secrets.sh. Writes config.json, the
+    dart-defines file consumed via --dart-define-from-file, which is
+    deliberately kept out of git.
 
 .EXAMPLE
     .\scripts\fetch-secrets.ps1
@@ -26,9 +24,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$repoRoot     = Split-Path -Parent $PSScriptRoot
-$configFile   = Join-Path $repoRoot 'config.json'
-$xcconfigFile = Join-Path $repoRoot 'ios\Flutter\AppConfig.xcconfig'
+$repoRoot   = Split-Path -Parent $PSScriptRoot
+$configFile = Join-Path $repoRoot 'config.json'
 
 if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
     throw 'gcloud not found on PATH. Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install'
@@ -69,38 +66,11 @@ could not read secret '$ConfigSecret' from project '$GcpProject'.
 "@
 }
 
-try { $config = $configJson | ConvertFrom-Json }
+try { $null = $configJson | ConvertFrom-Json }
 catch { throw "secret '$ConfigSecret' is not valid JSON: $_" }
 
 Write-Utf8Lf -Path $configFile -Text $configJson
 Write-Host "    wrote $configFile"
-
-# --- ios/Flutter/AppConfig.xcconfig ------------------------------------------
-# Xcode cannot read dart-defines, so the iOS-facing subset of config.json is
-# projected into an xcconfig that Debug.xcconfig/Release.xcconfig include after
-# TbDefault.xcconfig (later include wins).
-$mapping = [ordered]@{
-    'IOSAPPLICATIONID'              = 'iosApplicationId'
-    'IOSAPPLICATIONNAME'            = 'iosApplicationName'
-    'REGISTRATIONREDIRECTURLHOST'   = 'registrationRedirectUrlHost'
-    'REGISTRATIONREDIRECTURLSCHEME' = 'registrationRedirectUrlScheme'
-    'APPLINKSURLHOST'               = 'appLinksUrlHost'
-}
-
-$lines = @('// Generated from config.json by scripts/fetch-secrets. Do not edit.')
-foreach ($var in $mapping.Keys) {
-    $value = $config.$($mapping[$var])
-    if ($null -eq $value -or "$value" -eq '') { continue }
-    $value = "$value"
-    if ($value.Contains('//')) {
-        throw "$($mapping[$var]) contains '//', which xcconfig parses as a comment"
-    }
-    $lines += "$var=$value"
-}
-
-New-Item -ItemType Directory -Force -Path (Split-Path -Parent $xcconfigFile) | Out-Null
-Write-Utf8Lf -Path $xcconfigFile -Text ($lines -join "`n")
-Write-Host "    wrote $xcconfigFile"
 
 Write-Host ''
 Write-Host 'Done. Build with:'
