@@ -3,7 +3,7 @@
     Pulls the SWIM-OS mobile build configuration out of Google Secret Manager.
 
 .DESCRIPTION
-    Windows counterpart to scripts/fetch-secrets.sh. Writes config.json, the
+    Windows counterpart to scripts/fetch-secrets.sh. Writes configs.json, the
     dart-defines file consumed via --dart-define-from-file, which is
     deliberately kept out of git.
 
@@ -16,7 +16,7 @@
 [CmdletBinding()]
 param(
     # Secret Manager coordinates (ENG-245). Secret IDs may only contain
-    # [A-Za-z0-9_-]; there is no literal "config.json" secret.
+    # [A-Za-z0-9_-]; there is no literal "configs.json" secret.
     [string]$GcpProject                    = $(if ($env:GCP_PROJECT) { $env:GCP_PROJECT } else { 'riverwatch-be1e4' }),
     [string]$ConfigSecret                  = $(if ($env:CONFIG_SECRET) { $env:CONFIG_SECRET } else { 'SWIM-OS-MOBILE-CONFIG-JSON' }),
     [string]$ConfigSecretVersion           = 'latest'
@@ -25,7 +25,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repoRoot   = Split-Path -Parent $PSScriptRoot
-$configFile = Join-Path $repoRoot 'config.json'
+$configFile = Join-Path $repoRoot 'configs.json'
 
 if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
     throw 'gcloud not found on PATH. Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install'
@@ -54,7 +54,7 @@ function Write-Utf8Lf {
     [System.IO.File]::WriteAllText($Path, $normalized, [System.Text.UTF8Encoding]::new($false))
 }
 
-# --- config.json -------------------------------------------------------------
+# --- configs.json ------------------------------------------------------------
 Write-Host "==> Fetching ${ConfigSecret}:${ConfigSecretVersion} from $GcpProject"
 $configJson = Get-Secret -Name $ConfigSecret -Version $ConfigSecretVersion
 if ($null -eq $configJson) {
@@ -74,5 +74,5 @@ Write-Host "    wrote $configFile"
 
 Write-Host ''
 Write-Host 'Done. Build with:'
-Write-Host '    flutter build apk --dart-define-from-file=config.json'
-Write-Host '    flutter build ipa --dart-define-from-file=config.json'
+Write-Host '    flutter build apk --dart-define-from-file=configs.json'
+Write-Host '    flutter build ipa --dart-define-from-file=configs.json'

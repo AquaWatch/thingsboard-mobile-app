@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Pulls the SWIM-OS mobile build configuration out of Google Secret Manager and
-# writes config.json, the dart-defines file consumed via --dart-define-from-file.
+# writes configs.json, the dart-defines file consumed via --dart-define-from-file.
 #
 # Used by CI and by local dev. Locally it authenticates with your own gcloud
 # login; on a runner it uses whatever ADC the auth step put in place.
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 # --- Secret Manager coordinates (ENG-245) ------------------------------------
-# Secret IDs may only contain [A-Za-z0-9_-]; there is no literal "config.json"
+# Secret IDs may only contain [A-Za-z0-9_-]; there is no literal "configs.json"
 # secret. Override any of these with an env var if the IDs change.
 GCP_PROJECT="${GCP_PROJECT:-riverwatch-be1e4}"
 CONFIG_SECRET="${CONFIG_SECRET:-SWIM-OS-MOBILE-CONFIG-JSON}"
@@ -21,7 +21,7 @@ CONFIG_SECRET_VERSION="${CONFIG_SECRET_VERSION:-latest}"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
-config_file="config.json"
+config_file="configs.json"
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -48,7 +48,7 @@ access_secret() {
   gcloud secrets versions access "$2" --secret="$1" --project="$GCP_PROJECT"
 }
 
-# --- config.json -------------------------------------------------------------
+# --- configs.json ------------------------------------------------------------
 log "==> Fetching $CONFIG_SECRET:$CONFIG_SECRET_VERSION from $GCP_PROJECT"
 tmp_config="$(mktemp)"
 trap 'rm -f "$tmp_config"' EXIT
@@ -79,5 +79,5 @@ log "    wrote $config_file"
 
 log ""
 log "Done. Build with:"
-log "    flutter build apk --dart-define-from-file=config.json"
-log "    flutter build ipa --dart-define-from-file=config.json"
+log "    flutter build apk --dart-define-from-file=configs.json"
+log "    flutter build ipa --dart-define-from-file=configs.json"

@@ -54,4 +54,4 @@ GoogleService-Info.plist
 WARP.md
 
 # Config files
-config.json
+/configs.json

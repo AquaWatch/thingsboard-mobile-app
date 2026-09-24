@@ -23,8 +23,8 @@ secrets:
 
 | File | Purpose | Source |
 | --- | --- | --- |
-| `config.json` | dart-defines, passed with `--dart-define-from-file` | Secret Manager |
-| `ios/Flutter/AppConfig.xcconfig` | iOS build settings Xcode reads (bundle id, display name, URL scheme) | generated from `config.json` |
+| `configs.json` | dart-defines, passed with `--dart-define-from-file` | Secret Manager |
+| `ios/Flutter/AppConfig.xcconfig` | iOS build settings Xcode reads (bundle id, display name, URL scheme) | generated from `configs.json` |
 
 They live in Google Secret Manager in the **RiverWatch** project
 (`riverwatch-be1e4`) — see ENG-245.
@@ -43,7 +43,7 @@ One-time, then whenever the secrets change:
 .\scripts\fetch-secrets.ps1
 ```
 
-Both scripts pull the secret, write `config.json`, and generate
+Both scripts pull the secret, write `configs.json`, and generate
 `ios/Flutter/AppConfig.xcconfig` from it. Locally they use your own gcloud
 credentials, so log in first:
 
@@ -60,9 +60,9 @@ Windows).
 ### Building
 
 ```bash
-flutter run   --dart-define-from-file=config.json
-flutter build apk --dart-define-from-file=config.json
-flutter build ipa --dart-define-from-file=config.json
+flutter run   --dart-define-from-file=configs.json
+flutter build apk --dart-define-from-file=configs.json
+flutter build ipa --dart-define-from-file=configs.json
 ```
 
 ### CI
@@ -85,7 +85,7 @@ Credentials in place first:
 
 ### Where the values land
 
-`config.json` is the single source of truth. `android/app/build.gradle` reads it
+`configs.json` is the single source of truth. `android/app/build.gradle` reads it
 through the dart-define bundle. Xcode cannot read dart-defines directly, so the
 Runner scheme has a build pre-action that decodes `$DART_DEFINES` and writes
 `ios/Flutter/AppConfig.xcconfig` on every build. `Debug.xcconfig` and
@@ -95,7 +95,7 @@ override the `TbDefault.xcconfig` defaults. The generated file is gitignored and
 does not exist until the first build.
 
 Checked-in fallbacks (`android/app/build.gradle`, `ios/Flutter/TbDefault.xcconfig`)
-are set to the SWIM-OS values, so a build without `config.json` still produces the
+are set to the SWIM-OS values, so a build without `configs.json` still produces the
 right identifiers rather than ThingsBoard's.
 
 `ios/Runner/Runner.entitlements` is **not** templated — associated domains must
