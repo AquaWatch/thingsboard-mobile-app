@@ -14,7 +14,7 @@ set -euo pipefail
 # Secret IDs may only contain [A-Za-z0-9_-]; there is no literal "configs.json"
 # secret. Override any of these with an env var if the IDs change.
 GCP_PROJECT="${GCP_PROJECT:-riverwatch-be1e4}"
-CONFIG_SECRET="${CONFIG_SECRET:-SWIM-OS-MOBILE-CONFIG-JSON}"
+CONFIG_SECRET="${CONFIG_SECRET:-SWIM-OS-MOBILE-CONFIGS-JSON}"
 CONFIG_SECRET_VERSION="${CONFIG_SECRET_VERSION:-latest}"
 # -----------------------------------------------------------------------------
 

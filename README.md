@@ -53,7 +53,7 @@ gcloud auth application-default login
 
 You need `roles/secretmanager.secretAccessor` on the secret.
 
-The secret ID defaults to `SWIM-OS-MOBILE-CONFIG-JSON`; override it with the
+The secret ID defaults to `SWIM-OS-MOBILE-CONFIGS-JSON`; override it with the
 `CONFIG_SECRET` environment variable (or the `-ConfigSecret` parameter on
 Windows).
 
