@@ -1,5 +1,5 @@
 IOSAPPLICATIONID=com.aquawatchsolutions.swimos
 IOSAPPLICATIONNAME=SWIM-OS Mobile
-REGISTRATIONREDIRECTURLHOST=app.pe.thingsboard.org
-REGISTRATIONREDIRECTURLSCHEME=tbscheme
+REGISTRATIONREDIRECTURLHOST=swim-os.aquawatchsolutions.com
+REGISTRATIONREDIRECTURLSCHEME=com.aquawatchsolutions.swimos
 APPLINKSURLHOST=swim-os.aquawatchsolutions.com

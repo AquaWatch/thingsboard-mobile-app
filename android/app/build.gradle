@@ -40,8 +40,8 @@ def customLabel = getDartDefineValue('androidApplicationName') ?: 'SWIM-OS Mobil
 def appLinksUrlHost = getDartDefineValue('appLinksUrlHost') ?: 'swim-os.aquawatchsolutions.com'
 def webPathPrefix = getDartDefineValue('webPathPrefix') ?: '/api/noauth/qr'
 def appLinksUrlScheme = getDartDefineValue('appLinksUrlScheme') ?: 'https'
-def redirectURLHost = getDartDefineValue('registrationRedirectUrlHost') ?: 'app.pe.thingsboard.org'
-def redirectURLScheme = getDartDefineValue('registrationRedirectUrlScheme') ?: 'tbscheme'
+def redirectURLHost = getDartDefineValue('registrationRedirectUrlHost') ?: 'swim-os.aquawatchsolutions.com'
+def redirectURLScheme = getDartDefineValue('registrationRedirectUrlScheme') ?: 'com.aquawatchsolutions.swimos'
 
 android {
 namespace "org.thingsboard.pe.app"
