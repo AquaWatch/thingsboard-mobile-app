@@ -35,13 +35,13 @@ def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
-def customScheme = getDartDefineValue('thingsboardOAuth2CallbackUrlScheme') ?: 'org.thingsboard.app.auth'
-def customLabel = getDartDefineValue('androidApplicationName') ?: 'Thingsboard app'
-def appLinksUrlHost = getDartDefineValue('appLinksUrlHost') ?: 'thingsboard.cloud'
+def customScheme = getDartDefineValue('thingsboardOAuth2CallbackUrlScheme') ?: 'com.aquawatchsolutions.swimos.auth'
+def customLabel = getDartDefineValue('androidApplicationName') ?: 'SWIM-OS Mobile'
+def appLinksUrlHost = getDartDefineValue('appLinksUrlHost') ?: 'swim-os.aquawatchsolutions.com'
 def webPathPrefix = getDartDefineValue('webPathPrefix') ?: '/api/noauth/qr'
 def appLinksUrlScheme = getDartDefineValue('appLinksUrlScheme') ?: 'https'
-def redirectURLHost = getDartDefineValue('registrationRedirectUrlHost') ?: 'app.pe.thingsboard.org'
-def redirectURLScheme = getDartDefineValue('registrationRedirectUrlScheme') ?: 'tbscheme'
+def redirectURLHost = getDartDefineValue('registrationRedirectUrlHost') ?: 'swim-os.aquawatchsolutions.com'
+def redirectURLScheme = getDartDefineValue('registrationRedirectUrlScheme') ?: 'com.aquawatchsolutions.swimos'
 
 android {
 namespace "org.thingsboard.pe.app"
@@ -53,7 +53,7 @@ namespace "org.thingsboard.pe.app"
     }
    
     defaultConfig {
-        applicationId getDartDefineValue('androidApplicationId') ?: "org.thingsboard.pe.app"
+        applicationId getDartDefineValue('androidApplicationId') ?: "com.aquawatchsolutions.swimos"
         minSdkVersion 24
         multiDexEnabled true
         targetSdkVersion 36

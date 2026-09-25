@@ -52,3 +52,6 @@ GoogleService-Info.plist
 # FVM Version Cache
 .fvm/
 WARP.md
+
+# Config files
+/configs.json
