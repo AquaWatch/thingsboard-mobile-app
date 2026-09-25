@@ -3,8 +3,9 @@
 # Pulls the SWIM-OS mobile build configuration out of Google Secret Manager and
 # writes configs.json, the dart-defines file consumed via --dart-define-from-file.
 #
-# Locally it authenticates with your own gcloud login; on a runner it uses
-# whatever ADC the auth step put in place.
+# Authenticates with the gcloud CLI's own credentials: `gcloud auth login`
+# locally, or whatever the CI auth step activates for gcloud on a runner.
+# gcloud does not read Application Default Credentials.
 #
 #   ./scripts/fetch-secrets.sh
 #
@@ -63,13 +64,17 @@ fi
 # Validate and normalise in one pass, while the payload is still in the temp file
 # the trap covers: reject anything that is not a JSON object, and strip a UTF-8
 # BOM, which flutter cannot parse in --dart-define-from-file.
-"$python_bin" - "$tmp_config" <<'PY' || die "secret '$CONFIG_SECRET' is not a JSON object"
+"$python_bin" - "$tmp_config" "$CONFIG_SECRET" <<'PY' || exit 1
 import io, json, sys
 
-path = sys.argv[1]
+path, name = sys.argv[1], sys.argv[2]
 text = io.open(path, encoding='utf-8-sig', newline='').read()
-if not isinstance(json.loads(text), dict):
-    sys.exit(1)
+try:
+    obj = json.loads(text)
+except ValueError as exc:
+    sys.exit("error: secret '%s' is not valid JSON: %s" % (name, exc))
+if not isinstance(obj, dict):
+    sys.exit("error: secret '%s' is a JSON %s, not an object" % (name, type(obj).__name__))
 text = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n') + '\n'
 io.open(path, 'w', encoding='utf-8', newline='').write(text)
 PY
