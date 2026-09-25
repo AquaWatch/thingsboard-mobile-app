@@ -68,10 +68,10 @@ fi
 import io, json, sys
 
 path, name = sys.argv[1], sys.argv[2]
-text = io.open(path, encoding='utf-8-sig', newline='').read()
 try:
+    text = io.open(path, encoding='utf-8-sig', newline='').read()
     obj = json.loads(text)
-except ValueError as exc:
+except ValueError as exc:  # includes UnicodeDecodeError
     sys.exit("error: secret '%s' is not valid JSON: %s" % (name, exc))
 if not isinstance(obj, dict):
     sys.exit("error: secret '%s' is a JSON %s, not an object" % (name, type(obj).__name__))

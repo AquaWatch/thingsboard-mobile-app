@@ -24,11 +24,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Native command output is decoded with [Console]::OutputEncoding, which defaults
-# to the OEM codepage in Windows PowerShell 5.1 and corrupts every non-ASCII byte.
-# The bash twin sidesteps this by redirecting raw bytes to a file.
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
 $repoRoot   = Split-Path -Parent $PSScriptRoot
 $configFile = Join-Path $repoRoot 'configs.json'
 
@@ -42,7 +37,18 @@ function Get-Secret {
     # gcloud is a .cmd shim; capture stdout and let a non-zero exit mean "no access".
     $gcloudArgs = @('secrets', 'versions', 'access', $Version, "--secret=$Name", "--project=$GcpProject")
 
-    $payload = & gcloud @gcloudArgs
+    # Native command output is decoded with [Console]::OutputEncoding, which
+    # defaults to the OEM codepage in Windows PowerShell 5.1 and corrupts every
+    # non-ASCII byte. Switch to UTF-8 for this call only, then restore it so the
+    # caller's console is left as it was.
+    $previousEncoding = [Console]::OutputEncoding
+    try {
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $payload = & gcloud @gcloudArgs
+    }
+    finally {
+        [Console]::OutputEncoding = $previousEncoding
+    }
     if ($LASTEXITCODE -ne 0) { return $null }
     if ($payload -is [array]) { $payload = $payload -join "`n" }
     if ([string]::IsNullOrWhiteSpace($payload)) { return $null }
@@ -77,7 +83,8 @@ $configJson = $configJson.TrimStart([char]0xFEFF)
 
 try { $config = $configJson | ConvertFrom-Json }
 catch { throw "secret '$ConfigSecret' is not valid JSON: $_" }
-if ($config -isnot [System.Management.Automation.PSCustomObject]) {
+# PowerShell 7 unwraps a one-element array, so check the text as well as the type.
+if (-not $configJson.TrimStart().StartsWith('{') -or $config -isnot [System.Management.Automation.PSCustomObject]) {
     throw "secret '$ConfigSecret' is not a JSON object"
 }
 
