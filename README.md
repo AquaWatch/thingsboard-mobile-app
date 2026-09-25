@@ -84,5 +84,7 @@ identifiers.
 Because `thingsBoardApiEndpoint` now has a default, `ignoreRegionSelection` is
 always true and the region-selection screen is unreachable.
 
-`ios/Runner/Runner.entitlements` is **not** templated — associated domains must
-be literal, so `applinks:swim-os.aquawatchsolutions.com` is hardcoded there.
+`ios/Runner/Runner.entitlements` declares `applinks:swim-os.aquawatchsolutions.com`.
+The Runner scheme's pre-action appends `applinks:$APPLINKSURLHOST` to it on each iOS
+build when missing but never removes an entry, so changing `appLinksUrlHost` leaves
+the old domain behind. Deep linking is not in use (ENG-274).

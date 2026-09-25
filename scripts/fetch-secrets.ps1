@@ -29,9 +29,8 @@ $ErrorActionPreference = 'Stop'
 # The bash twin sidesteps this by redirecting raw bytes to a file.
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-$repoRoot          = Split-Path -Parent $PSScriptRoot
-$configFile        = Join-Path $repoRoot 'configs.json'
-$entitlementsFile  = Join-Path $repoRoot 'ios\Runner\Runner.entitlements'
+$repoRoot   = Split-Path -Parent $PSScriptRoot
+$configFile = Join-Path $repoRoot 'configs.json'
 
 if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
     throw 'gcloud not found on PATH. Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install'
@@ -73,25 +72,8 @@ could not read secret '$ConfigSecret' from project '$GcpProject'.
 "@
 }
 
-try { $config = $configJson | ConvertFrom-Json }
+try { $null = $configJson | ConvertFrom-Json }
 catch { throw "secret '$ConfigSecret' is not valid JSON: $_" }
-
-# Associated domains must be literal, so Runner.entitlements cannot read
-# appLinksUrlHost. Assert the two agree: otherwise a config change takes effect
-# on Android and silently leaves iOS universal links pointing at the old domain.
-if ($config.appLinksUrlHost) {
-    if (-not (Test-Path $entitlementsFile)) { throw "cannot read $entitlementsFile" }
-    $declared = [regex]::Matches((Get-Content -Raw $entitlementsFile), 'applinks:([^<\s]+)') |
-        ForEach-Object { $_.Groups[1].Value }
-    if ($declared -notcontains $config.appLinksUrlHost) {
-        $found = if ($declared) { $declared -join ', ' } else { '(none)' }
-        throw @"
-appLinksUrlHost is not declared in $entitlementsFile.
-  configs.json:  $($config.appLinksUrlHost)
-  entitlements:  $found
-"@
-    }
-}
 
 Write-Utf8Lf -Path $configFile -Text $configJson
 Write-Host "    wrote $configFile"
