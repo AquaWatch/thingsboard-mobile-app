@@ -19,10 +19,15 @@ param(
     # [A-Za-z0-9_-]; there is no literal "configs.json" secret.
     [string]$GcpProject                    = $(if ($env:GCP_PROJECT) { $env:GCP_PROJECT } else { 'riverwatch-be1e4' }),
     [string]$ConfigSecret                  = $(if ($env:CONFIG_SECRET) { $env:CONFIG_SECRET } else { 'SWIM-OS-MOBILE-CONFIGS-JSON' }),
-    [string]$ConfigSecretVersion           = 'latest'
+    [string]$ConfigSecretVersion           = $(if ($env:CONFIG_SECRET_VERSION) { $env:CONFIG_SECRET_VERSION } else { 'latest' })
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Native command output is decoded with [Console]::OutputEncoding, which defaults
+# to the OEM codepage in Windows PowerShell 5.1 and corrupts every non-ASCII byte.
+# The bash twin sidesteps this by redirecting raw bytes to a file.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $repoRoot   = Split-Path -Parent $PSScriptRoot
 $configFile = Join-Path $repoRoot 'configs.json'
@@ -49,7 +54,8 @@ function Write-Utf8Lf {
     # its bash twin byte-identical, so switching between them is not a diff.
     param([string]$Path, [string]$Text)
 
-    $normalized = $Text -replace "`r`n", "`n" -replace "`r", "`n"
+    $normalized = $Text.TrimStart([char]0xFEFF)
+    $normalized = $normalized -replace "`r`n", "`n" -replace "`r", "`n"
     $normalized = $normalized.TrimEnd("`n") + "`n"
     [System.IO.File]::WriteAllText($Path, $normalized, [System.Text.UTF8Encoding]::new($false))
 }
