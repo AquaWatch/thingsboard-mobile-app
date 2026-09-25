@@ -22,6 +22,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 config_file="configs.json"
+entitlements_file="ios/Runner/Runner.entitlements"
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -71,6 +72,31 @@ text = io.open(path, encoding='utf-8-sig', newline='').read()
 json.loads(text)
 text = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n') + '\n'
 io.open(path, 'w', encoding='utf-8', newline='').write(text)
+PY
+
+# Associated domains must be literal, so Runner.entitlements cannot read
+# appLinksUrlHost. Assert the two agree: otherwise a config change takes effect
+# on Android and silently leaves iOS universal links pointing at the old domain.
+"$python_bin" - "$tmp_config" "$entitlements_file" <<'PY' || exit 1
+import io, json, re, sys
+
+cfg_path, ent_path = sys.argv[1], sys.argv[2]
+host = json.loads(io.open(cfg_path, encoding='utf-8').read()).get('appLinksUrlHost')
+if not host:
+    raise SystemExit(0)
+
+try:
+    ent = io.open(ent_path, encoding='utf-8').read()
+except OSError as exc:
+    raise SystemExit('error: cannot read %s: %s' % (ent_path, exc))
+
+declared = re.findall(r'applinks:([^<\s]+)', ent)
+if host not in declared:
+    raise SystemExit(
+        'error: appLinksUrlHost is not declared in %s.\n'
+        '  configs.json:  %s\n'
+        '  entitlements:  %s' % (ent_path, host, ', '.join(declared) or '(none)')
+    )
 PY
 
 mv "$tmp_config" "$config_file"
