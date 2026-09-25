@@ -3,8 +3,8 @@
 # Pulls the SWIM-OS mobile build configuration out of Google Secret Manager and
 # writes configs.json, the dart-defines file consumed via --dart-define-from-file.
 #
-# Used by CI and by local dev. Locally it authenticates with your own gcloud
-# login; on a runner it uses whatever ADC the auth step put in place.
+# Locally it authenticates with your own gcloud login; on a runner it uses
+# whatever ADC the auth step put in place.
 #
 #   ./scripts/fetch-secrets.sh
 #

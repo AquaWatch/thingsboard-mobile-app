@@ -65,24 +65,6 @@ flutter build apk --dart-define-from-file=configs.json
 flutter build ipa --dart-define-from-file=configs.json
 ```
 
-### CI
-
-The same script runs unchanged on a runner — it just needs Application Default
-Credentials in place first:
-
-```yaml
-- uses: google-github-actions/auth@v2
-  with:
-    project_id: riverwatch-be1e4
-    workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-    service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-- uses: google-github-actions/setup-gcloud@v2
-
-- name: Fetch build configuration
-  run: ./scripts/fetch-secrets.sh
-```
-
 ### Where the values land
 
 `configs.json` is the single source of truth. `android/app/build.gradle` reads it
