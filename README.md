@@ -78,8 +78,7 @@ generated file rather than falling back to `TbDefault.xcconfig`.
 Checked-in fallbacks (`android/app/build.gradle`, `ios/Flutter/TbDefault.xcconfig`,
 `lib/constants/app_constants.dart`) are set to the SWIM-OS values, so a build
 without `configs.json` still targets the SWIM-OS instance and produces the right
-identifiers. OAuth login and the app secrets still need `configs.json`:
-`thingsboardOAuth2CallbackUrlScheme` and both app secrets default to empty.
+identifiers. The app secrets have no default and still need `configs.json`.
 
 Because `thingsBoardApiEndpoint` now has a default, `ignoreRegionSelection` is
 always true and the region-selection screen is unreachable.

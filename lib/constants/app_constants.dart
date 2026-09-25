@@ -7,6 +7,7 @@ abstract final class ThingsboardAppConstants {
   );
   static const thingsboardOAuth2CallbackUrlScheme = String.fromEnvironment(
     'thingsboardOAuth2CallbackUrlScheme',
+    defaultValue: 'com.aquawatchsolutions.swimos.auth',
   );
   static const thingsboardIOSAppSecret = String.fromEnvironment(
     'thingsboardIosAppSecret',
