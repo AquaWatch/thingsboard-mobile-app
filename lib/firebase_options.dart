@@ -50,22 +50,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCYHkQXG5nsvE3iyJiKFR3AF11GXECHbvU',
-    appId: '1:879468964439:android:fba51605a60f5e6b065112',
-    messagingSenderId: '879468964439',
-    projectId: 'riverwatch-be1e4',
-    databaseURL: 'https://riverwatch-be1e4.firebaseio.com',
-    storageBucket: 'riverwatch-be1e4.appspot.com',
+    apiKey: 'AIzaSyDtvz8cRwCUt4T7h8mOi52yaAOaXr71_YY',
+    appId: '1:992746337963:android:cb09f7fc36fb000be8e9ee',
+    messagingSenderId: '992746337963',
+    projectId: 'aquawatch-swimos',
+    storageBucket: 'aquawatch-swimos.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBPgXmpJY2s1LQ2gwTdRb6BaY2Zu0ToxwY',
-    appId: '1:879468964439:ios:0dfd7ecd7def3870065112',
-    messagingSenderId: '879468964439',
-    projectId: 'riverwatch-be1e4',
-    databaseURL: 'https://riverwatch-be1e4.firebaseio.com',
-    storageBucket: 'riverwatch-be1e4.appspot.com',
-    iosClientId: '879468964439-9p351s68de2l9r3mjlugamp92p4irf9h.apps.googleusercontent.com',
+    apiKey: 'AIzaSyChv2Vdb-9uuHE6YKrmmZ14WOTCtd8x88c',
+    appId: '1:992746337963:ios:fbe922d54c6c10d9e8e9ee',
+    messagingSenderId: '992746337963',
+    projectId: 'aquawatch-swimos',
+    storageBucket: 'aquawatch-swimos.firebasestorage.app',
     iosBundleId: 'com.aquawatchsolutions.swimos',
   );
 }
