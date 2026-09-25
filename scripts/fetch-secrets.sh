@@ -56,7 +56,7 @@ trap 'rm -f "$tmp_config"' EXIT
 if ! access_secret "$CONFIG_SECRET" "$CONFIG_SECRET_VERSION" > "$tmp_config" || [ ! -s "$tmp_config" ]; then
   die "could not read secret '$CONFIG_SECRET' from project '$GCP_PROJECT'.
   - Confirm the secret ID (set CONFIG_SECRET=<id> to override).
-  - Confirm you are logged in:  gcloud auth application-default login
+  - Confirm you are logged in:  gcloud auth login
   - Confirm you hold roles/secretmanager.secretAccessor on the secret."
 fi
 

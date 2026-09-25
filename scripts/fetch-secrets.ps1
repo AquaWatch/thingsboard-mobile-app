@@ -66,7 +66,7 @@ if ($null -eq $configJson) {
     throw @"
 could not read secret '$ConfigSecret' from project '$GcpProject'.
   - Confirm the secret ID (pass -ConfigSecret <id> to override).
-  - Confirm you are logged in:  gcloud auth application-default login
+  - Confirm you are logged in:  gcloud auth login
   - Confirm you hold roles/secretmanager.secretAccessor on the secret.
 "@
 }
