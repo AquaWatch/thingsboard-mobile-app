@@ -94,9 +94,13 @@ applies the last assignment of a given variable, so the generated values
 override the `TbDefault.xcconfig` defaults. The generated file is gitignored and
 does not exist until the first build.
 
-Checked-in fallbacks (`android/app/build.gradle`, `ios/Flutter/TbDefault.xcconfig`)
-are set to the SWIM-OS values, so a build without `configs.json` still produces the
-right identifiers rather than ThingsBoard's.
+Checked-in fallbacks (`android/app/build.gradle`, `ios/Flutter/TbDefault.xcconfig`,
+`lib/constants/app_constants.dart`) are set to the SWIM-OS values, so a build
+without `configs.json` still targets the SWIM-OS instance and produces the right
+identifiers.
+
+Because `thingsBoardApiEndpoint` now has a default, `ignoreRegionSelection` is
+always true and the region-selection screen is unreachable.
 
 `ios/Runner/Runner.entitlements` is **not** templated — associated domains must
 be literal, so `applinks:swim-os.aquawatchsolutions.com` is hardcoded there.
