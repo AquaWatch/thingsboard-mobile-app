@@ -61,14 +61,15 @@ if ! access_secret "$CONFIG_SECRET" "$CONFIG_SECRET_VERSION" > "$tmp_config" || 
 fi
 
 # Validate and normalise in one pass, while the payload is still in the temp file
-# the trap covers: reject anything that is not JSON, and strip a UTF-8 BOM, which
-# flutter cannot parse in --dart-define-from-file.
-"$python_bin" - "$tmp_config" <<'PY' || die "secret '$CONFIG_SECRET' is not valid JSON"
+# the trap covers: reject anything that is not a JSON object, and strip a UTF-8
+# BOM, which flutter cannot parse in --dart-define-from-file.
+"$python_bin" - "$tmp_config" <<'PY' || die "secret '$CONFIG_SECRET' is not a JSON object"
 import io, json, sys
 
 path = sys.argv[1]
 text = io.open(path, encoding='utf-8-sig', newline='').read()
-json.loads(text)
+if not isinstance(json.loads(text), dict):
+    sys.exit(1)
 text = text.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n') + '\n'
 io.open(path, 'w', encoding='utf-8', newline='').write(text)
 PY

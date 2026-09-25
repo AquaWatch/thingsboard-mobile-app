@@ -54,8 +54,7 @@ function Write-Utf8Lf {
     # its bash twin byte-identical, so switching between them is not a diff.
     param([string]$Path, [string]$Text)
 
-    $normalized = $Text.TrimStart([char]0xFEFF)
-    $normalized = $normalized -replace "`r`n", "`n" -replace "`r", "`n"
+    $normalized = $Text -replace "`r`n", "`n" -replace "`r", "`n"
     $normalized = $normalized.TrimEnd("`n") + "`n"
     [System.IO.File]::WriteAllText($Path, $normalized, [System.Text.UTF8Encoding]::new($false))
 }
@@ -72,8 +71,15 @@ could not read secret '$ConfigSecret' from project '$GcpProject'.
 "@
 }
 
-try { $null = $configJson | ConvertFrom-Json }
+# Strip a UTF-8 BOM before parsing: ConvertFrom-Json in Windows PowerShell 5.1
+# rejects it, and flutter cannot parse it in --dart-define-from-file either.
+$configJson = $configJson.TrimStart([char]0xFEFF)
+
+try { $config = $configJson | ConvertFrom-Json }
 catch { throw "secret '$ConfigSecret' is not valid JSON: $_" }
+if ($config -isnot [System.Management.Automation.PSCustomObject]) {
+    throw "secret '$ConfigSecret' is not a JSON object"
+}
 
 Write-Utf8Lf -Path $configFile -Text $configJson
 Write-Host "    wrote $configFile"
