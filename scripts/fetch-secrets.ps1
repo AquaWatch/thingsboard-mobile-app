@@ -17,7 +17,7 @@
 param(
     # Secret Manager coordinates (ENG-245). Secret IDs may only contain
     # [A-Za-z0-9_-]; there is no literal "configs.json" secret.
-    [string]$GcpProject                    = $(if ($env:GCP_PROJECT) { $env:GCP_PROJECT } else { 'riverwatch-be1e4' }),
+    [string]$GcpProject                    = $(if ($env:GCP_PROJECT) { $env:GCP_PROJECT } else { 'aquawatch-swimos' }),
     [string]$ConfigSecret                  = $(if ($env:CONFIG_SECRET) { $env:CONFIG_SECRET } else { 'SWIM-OS-MOBILE-CONFIGS-JSON' }),
     [string]$ConfigSecretVersion           = $(if ($env:CONFIG_SECRET_VERSION) { $env:CONFIG_SECRET_VERSION } else { 'latest' })
 )
